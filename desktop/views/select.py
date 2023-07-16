@@ -1,79 +1,96 @@
-import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.font as tkf
 
 
-class Select(tk.Frame):
+class Select(ttk.Frame):
 
     def __init__(
             self,
             app,
             frame,
-            nav_font
     ):
         super().__init__(frame)
         self.app = app
-
-        # configure grid weight
-        # self.grid_rowconfigure(0, weight=1)
-        # self.grid_rowconfigure(1, weight=1)
-        # self.grid_columnconfigure(0, weight=1)
-        # self.grid_columnconfigure(1, weight=1)
-
         # widget definitions
-        header_label = tk.Label(
-            master=self,
-            text="Select Ledger"
+        title_label = ttk.Label(
+            self,
+            text="We_Square?",
+            font=tkf.Font(
+                size=30,
+                family="Impact"
+            )
         )
-        select_label = tk.Label(
-            master=self,
+        tooltip_checkbox = ttk.Checkbutton(
+            self,
+            text="Enable Tooltips"
+        )
+        select_label = ttk.Label(
+            self,
             text="Select Existing"
         )
-        select_dropdown = ttk.Combobox(
-            master=self,
+        select_dropdown = ttk.OptionMenu(
+            self,
+            variable=None,
         )
-        home_button = tk.Button(
-            master=self,
-            text="Home",
-            font=nav_font,
-            command=self.raise_home_frame
+        create_button = ttk.Button(
+            self,
+            text="New Ledger",
+            command=self.raise_create_frame
         )
-        ledger_button = tk.Button(
-            master=self,
-            text="View Ledger",
-            font=nav_font,
+        ledger_button = ttk.Button(
+            self,
+            text="View Selected",
             command=self.raise_ledger_frame
         )
 
+        # configure grid rows
+        self.grid_rowconfigure(0, weight=5)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=1)
+        # configure grid columns
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
         # frame layout
-        header_label.grid(
+        title_label.grid(
             column=0,
             row=0,
+            columnspan=2
         )
-        select_label.grid(
+        tooltip_checkbox.grid(
             column=0,
             row=1,
-            columnspan=1
+            columnspan=1,
+            sticky="W"
+        )
+        select_label.grid(
+            column=1,
+            row=1,
+            columnspan=1,
+            sticky="w"
         )
         select_dropdown.grid(
-            column=0,
+            column=1,
             row=2,
-            columnspan=1
+            columnspan=1,
+            sticky="WE"
         )
-        home_button.grid(
+        create_button.grid(
             column=0,
             row=3,
             columnspan=1,
-            sticky="EW",
+            sticky="WE"
         )
         ledger_button.grid(
             column=1,
             row=3,
             columnspan=1,
-            sticky="EW",
+            sticky="WE"
         )
 
-    def raise_home_frame(self):
-        self.app.raise_frame("home")
+    def raise_create_frame(self):
+        self.app.raise_frame("create")
 
     def raise_ledger_frame(self):
         self.app.raise_frame("ledger")

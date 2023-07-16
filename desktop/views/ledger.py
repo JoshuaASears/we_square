@@ -1,161 +1,265 @@
-import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.messagebox as tkm
+
+width = 10
 
 
-class Ledger(tk.Frame):
+class Ledger(ttk.Frame):
 
     def __init__(
             self,
             app,
             frame,
-            nav_font
     ):
         super().__init__(frame)
         self.app = app
 
-        # configure grid weight
-        # self.grid_rowconfigure(0, weight=1)
-        # self.grid_rowconfigure(1, weight=1)
-        # self.grid_columnconfigure(0, weight=1)
-        # self.grid_columnconfigure(1, weight=1)
-
         # widget definitions
-        header_label = tk.Label(
-            master=self,
+        header_label = ttk.Label(
+            self,
             text="[LEDGER TITLE]"
         )
-        shared_by_label = tk.Label(
-            master=self,
+        shared_by_label = ttk.Label(
+            self,
             text="Shared by:"
         )
-        shared_by_list = tk.Label(
-            master=self,
+        shared_by_list = ttk.Label(
+            self,
             text="[NAMES ON LEDGER]"
         )
-        transaction_label = tk.Label(
-            master=self,
-            text="Transaction"
+        item_label = ttk.Label(
+            self,
+            text="Item"
         )
-        amount_label = tk.Label(
-            master=self,
+        amount_label = ttk.Label(
+            self,
             text="Amount"
         )
-        paid_by_label = tk.Label(
-            master=self,
-            text="Paid By"
-        )
-        date_label = tk.Label(
-            master=self,
+        date_label = ttk.Label(
+            self,
             text="Date"
         )
-        ledger_label = tk.Label(
-            master=self,
-            text="[ITEMS ON LEDGER]"
+        paid_by_label = ttk.Label(
+            self,
+            text="Paid By"
         )
-        transaction_entry = tk.Entry(
-            master=self,
+        item_dropdown = ttk.Combobox(
+            self,
+            width=width
         )
-        amount_entry = tk.Entry(
-            master=self,
-            width=10
+        amount_entry = ttk.Entry(
+            self,
+            width=width
         )
-        paid_by_entry = tk.Entry(
-            master=self,
-            width=10
+        date_entry = ttk.Entry(
+            self,
+            width=width
         )
-        date_entry = tk.Entry(
-            master=self,
-            width=10
+        paid_by_menubutton = ttk.Menubutton(
+            self,
+            width=width
         )
-        add_button = tk.Button(
-            master=self,
-            text="+",
-            command=self.add_item
+        ledger_list = ttk.Treeview(
+            self,
+            height=3,
+            listvariable=None
         )
-        select_button = tk.Button(
-            master=self,
+        add_item_button = ttk.Button(
+            self,
+            text="add",
+            command=self.add_item,
+            width=int(width/2)
+        )
+        edit_item_button = ttk.Button(
+            self,
+            text="edit",
+            command=self.edit_item,
+            width=int(width/2)
+        )
+        delete_item_button = ttk.Button(
+            self,
+            text="del",
+            command=self.delete_item,
+            width=int(width/2)
+        )
+        summary_label = ttk.Label(
+            self,
+            text="[LEDGER SUMMARY]",
+        )
+        select_button = ttk.Button(
+            self,
             text="Select Ledger",
-            font=nav_font,
             command=self.raise_select_frame
         )
-        total_button = tk.Button(
-            master=self,
-            text="We_Square?",
-            font=nav_font,
-            command=self.raise_total_frame
+        send_button = ttk.Button(
+            self,
+            text="Send Ledger",
+            command=self.send_ledger
         )
+        delete_ledger_button = ttk.Button(
+            self,
+            text="Delete Ledger",
+            command=self.delete_ledger
+        )
+
+        # configure grid rows
+        for num in range(8):
+            self.grid_rowconfigure(num, weight=1)
+        # configure grid columns
+        for num in range(5):
+            self.grid_columnconfigure(num, weight=1)
 
         # frame layout
         header_label.grid(
             column=0,
             row=0,
+            columnspan=4,
+            sticky="WE"
         )
         shared_by_label.grid(
             column=0,
-            row=1
+            row=1,
+            columnspan=1,
+            sticky="W"
         )
         shared_by_list.grid(
             column=1,
-            row=1
+            row=1,
+            columnspan=3,
+            sticky="W"
         )
-        transaction_label.grid(
+        item_label.grid(
             column=0,
             row=2,
+            columnspan=1,
+            sticky="W"
         )
         amount_label.grid(
             column=1,
             row=2,
-        )
-        paid_by_label.grid(
-            column=2,
-            row=2,
+            columnspan=1,
+            sticky="W"
         )
         date_label.grid(
+            column=2,
+            row=2,
+            columnspan=1,
+            sticky="W"
+        )
+        paid_by_label.grid(
             column=3,
             row=2,
+            columnspan=1,
+            sticky="W"
         )
-        ledger_label.grid(
+        item_dropdown.grid(
             column=0,
             row=3,
-        )
-        transaction_entry.grid(
-            column=0,
-            row=4,
+            columnspan=1,
+            sticky="WE"
         )
         amount_entry.grid(
             column=1,
-            row=4,
-        )
-        paid_by_entry.grid(
-            column=2,
-            row=4,
+            row=3,
+            columnspan=1,
+            sticky="WE"
         )
         date_entry.grid(
-            column=3,
-            row=4,
+            column=2,
+            row=3,
+            columnspan=1,
+            sticky="WE"
         )
-        add_button.grid(
+        paid_by_menubutton.grid(
+            column=3,
+            row=3,
+            columnspan=1,
+            sticky="WE"
+        )
+        ledger_list.grid(
+            column=0,
+            row=4,
+            columnspan=4,
+            rowspan=2,
+            sticky="NSEW"
+        )
+        add_item_button.grid(
+            column=4,
+            row=3,
+            columnspan=1,
+            sticky="NS"
+        )
+        edit_item_button.grid(
             column=4,
             row=4,
+            columnspan=1,
+            rowspan=1,
+            sticky="NS"
+        )
+        delete_item_button.grid(
+            column=4,
+            row=5,
+            columnspan=1,
+            rowspan=1,
+            sticky="NS"
+        )
+        summary_label.grid(
+            column=0,
+            row=6,
+            columnspan=5,
+            sticky="W"
         )
         select_button.grid(
             column=0,
-            row=5,
+            row=7,
             columnspan=1,
-            sticky="EW",
+            sticky="WE"
         )
-        total_button.grid(
+        send_button.grid(
             column=1,
-            row=5,
+            row=7,
             columnspan=1,
-            sticky="EW",
+            sticky="WE"
+        )
+        delete_ledger_button.grid(
+            column=2,
+            row=7,
+            columnspan=1,
+            sticky="WE"
         )
 
     def raise_select_frame(self):
         self.app.raise_frame("select")
 
-    def raise_total_frame(self):
-        self.app.raise_frame("total")
+    def raise_home_frame(self):
+        self.app.raise_frame("home")
 
     def add_item(self):
         pass
+
+    def edit_item(self):
+        pass
+
+    def delete_item(self):
+        pass
+
+    def send_ledger(self):
+        confirmation = tkm.askyesno(
+            title="Confirmation: Email Ledger",
+            message="Click Yes to email Ledger and Balance Summary to all "
+                    "persons on this Ledger.",
+            icon=tkm.INFO
+        )
+        if confirmation:
+            #TODO: email
+            pass
+
+    def delete_ledger(self):
+        confirmation = tkm.askokcancel(
+            title="Confirmation: Delete Ledger",
+            message="Click OK to permanently delete this Ledger.",
+            icon=tkm.WARNING
+        )
+        if confirmation:
+            #TODO: delete ledger tables
+            pass

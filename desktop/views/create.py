@@ -1,143 +1,168 @@
-import tkinter as tk
+import tkinter.ttk as ttk
+
+width = 10
 
 
-class Create(tk.Frame):
+class Create(ttk.Frame):
 
     def __init__(
             self,
             app,
-            frame,
-            nav_font
+            frame
     ):
         super().__init__(frame)
         self.app = app
 
-        # configure grid weight
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
         # widget definitions
-        header_label = tk.Label(
-            master=self,
-            text="New Ledger"
+        title_label = ttk.Label(
+            self,
+            text="Ledger Title",
         )
-        title_label = tk.Label(
-            master=self,
-            text="Ledger Title"
+        title_entry = ttk.Entry(
+            self,
         )
-        title_entry = tk.Entry(
-            master=self,
-        )
-        name_label = tk.Label(
-            master=self,
+        name_label = ttk.Label(
+            self,
             text="Name"
         )
-        email_label = tk.Label(
-            master=self,
+        email_label = ttk.Label(
+            self,
             text="Email"
         )
-        name_list = tk.Label(
-            master=self,
-            text="[NAMES/EMAILS ON LEDGER]"
+        name_entry = ttk.Entry(
+            self,
         )
-        name_entry = tk.Entry(
-            master=self,
+        email_entry = ttk.Entry(
+            self,
         )
-        email_entry = tk.Entry(
-            master=self,
+        add_button = ttk.Button(
+            self,
+            text="add",
+            command=self.add_person,
+            width=int(width / 2),
         )
-        add_button = tk.Button(
-            master=self,
-            text="+",
-            command=self.add_person
+        name_list = ttk.Treeview(
+            self,
+            height=3,
+            listvariable=None,
         )
-        home_button = tk.Button(
-            master=self,
-            text="Home",
-            font=nav_font,
-            command=self.raise_home_frame
+        edit_button = ttk.Button(
+            self,
+            text="edit",
+            command=self.edit_person,
+            width=int(width / 2)
         )
-        create_button = tk.Button(
-            master=self,
+        delete_button = ttk.Button(
+            self,
+            text="del",
+            command=self.delete_person,
+            width=int(width / 2)
+        )
+        select_button = ttk.Button(
+            self,
+            text="Back",
+            command=self.raise_select_frame
+        )
+        ledger_button = ttk.Button(
+            self,
             text="Create Ledger",
-            font=nav_font,
             command=self.raise_ledger_frame
         )
 
+        # configure grid rows
+        for num in range(8):
+            self.grid_rowconfigure(num, weight=1)
+        # configure grid columns
+        for num in range(3):
+            self.grid_columnconfigure(num, weight=1)
+
         # frame layout
-        header_label.grid(
-            column=0,
-            row=0,
-            columnspan=2,
-            sticky="EW"
-        )
+
         title_label.grid(
             column=0,
-            row=1,
+            row=0,
             columnspan=1,
             sticky="W"
         )
         title_entry.grid(
             column=0,
-            row=2,
+            row=1,
             columnspan=2,
             sticky="EW"
         )
         name_label.grid(
             column=0,
-            row=3,
+            row=2,
             columnspan=1,
-            sticky="W"
+            sticky="EW"
         )
         email_label.grid(
             column=1,
-            row=3,
+            row=2,
             columnspan=1,
-            sticky="W"
-        )
-        name_list.grid(
-            column=0,
-            row=4,
-            columnspan=2,
             sticky="EW"
         )
         name_entry.grid(
             column=0,
-            row=5,
+            row=3,
             columnspan=1,
             sticky="EW"
         )
         email_entry.grid(
             column=1,
-            row=5,
+            row=3,
             columnspan=1,
             sticky="EW"
         )
         add_button.grid(
             column=2,
-            row=5,
-            columnspan=1
+            row=3,
+            columnspan=1,
+            sticky="NS"
         )
-        home_button.grid(
+        name_list.grid(
+            column=0,
+            row=4,
+            columnspan=2,
+            rowspan=2,
+            sticky="NSEW"
+        )
+        edit_button.grid(
+            column=2,
+            row=4,
+            columnspan=1,
+            sticky="NS"
+        )
+        delete_button.grid(
+            column=2,
+            row=5,
+            columnspan=1,
+            sticky="NS"
+        )
+        select_button.grid(
             column=0,
             row=6,
             columnspan=1,
-            sticky="EW",
+            sticky="EW"
         )
-        create_button.grid(
+        ledger_button.grid(
             column=1,
             row=6,
             columnspan=1,
-            sticky="EW",
+            sticky="EW"
         )
 
-    def raise_home_frame(self):
-        self.app.raise_frame("home")
+    def raise_select_frame(self):
+        self.app.raise_frame("select")
 
     def raise_ledger_frame(self):
         self.app.raise_frame("ledger")
 
     def add_person(self):
+        pass
+
+    def edit_person(self):
+        pass
+
+    def delete_person(self):
         pass
