@@ -1,11 +1,13 @@
-# we_square?
+# We_Square?
 
-We_Square? is named after the colloquialism, “Are we square?” which we ask each other to determine whether we owe someone money or not. 
+**We_Square?** is named after the colloquialism, “Are we square?” which we ask each other to determine whether we or not we owe each other money for shared expenses.
 
-We Square is an expense tracking application with full data persistence in which users can record shared expenses on a ledger, identify who paid for what items, and then get a summary of who owes who how much to balance out the expenses.
+**We_Square?** is an expense tracking application with full data persistence in which users can have multiple ledgers with different people, record shared expenses on their ledgers, identify who paid for what items, and view a summary of how to balance out their shared expenses evenly.
 
-It is developed using Python 3.11, the Tkinter GUI API, and a model-view-control architecture.
+It is developed using Python, SQLite, and a model-view-control architecture.
+- Python 3.11 Libraries:
+  - tkinter
+  - sqlite3
+  - socket
 
 ## Current version: Pre-release v 0.1.0
-
-UI only! Back end is currently under development.
