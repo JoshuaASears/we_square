@@ -13,4 +13,4 @@ It is developed using Python and a model-view-control architecture.
   - datetime
   - socket
 
-## Current version: Pre-release v 0.1.0
+## Current version: Pre-release v 0.2.0
