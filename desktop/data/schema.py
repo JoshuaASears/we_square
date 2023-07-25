@@ -1,5 +1,3 @@
-import datetime
-
 
 class Person:
 
@@ -24,26 +22,27 @@ class Transaction:
             self,
             item: str,
             amount: str,
-            date: datetime.date,
+            date: str,
             paid_by: Person
     ):
 
-        self._item = item
-        self._item_modified = False
-
-        self._amount = amount
-        self._amount_modified = False
-
-        self._date = date
-        self._date_modified = False
-
-        self._paid_by = paid_by
-        self._paid_be_modified = False
+        # (value, has been edited: Bool)
+        self._item = [item, False]
+        self._amount = [amount, False]
+        self._date = [date, False]
+        self._paid_by = [paid_by, False]
 
         self._transaction_deleted = False
 
-    def get_item(self):
-        return self._item
+    def get_transaction_data(self):
+        data = {
+            "item": self._item,
+            "amount": self._amount,
+            "date": self._date,
+            "paid_by": self._paid_by,
+            "deleted": self._transaction_deleted
+        }
+        return data.copy()
 
     def get_amount(self):
         return self._amount
@@ -55,26 +54,23 @@ class Transaction:
         return self._paid_by
 
     def set_item(self, new_value):
-        self._item = new_value
-        self._item_modified = True
+        self._item[0] = new_value
+        self._item[1] = True
 
     def set_amount(self, new_value):
-        self._amount = new_value
-        self._amount_modified = True
+        self._amount[0] = new_value
+        self._amount[1] = True
 
     def set_date(self, new_value):
-        self._date = new_value
-        self._date_modified = True
+        self._date[0] = new_value
+        self._date[1] = True
 
     def set_paid_by(self, new_value):
-        self._paid_by = new_value
-        self._paid_be_modified = True
+        self._paid_by[0] = new_value
+        self._paid_by[1] = True
 
     def delete(self):
         self._transaction_deleted = True
-
-    def is_deleted(self):
-        return self._transaction_deleted
 
 
 class Ledger:
@@ -84,10 +80,13 @@ class Ledger:
         self._persons = persons
         self._transaction_count = 0
         self._transactions = dict()
-        self._summary = ""
+        self._summary = "[PLACEHOLDER FOR NOW]"
 
     def get_title(self):
         return self._title
+
+    def get_summary(self):
+        return self._summary
 
     def get_persons(self):
         return self._persons

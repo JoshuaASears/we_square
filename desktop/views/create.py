@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.messagebox as tkm
 import desktop.model.db_create as model
 
 width = 10
@@ -207,15 +208,26 @@ class Create(ttk.Frame):
             name = self.name_list.item(row)['values'][0]
             email = self.name_list.item(row)['values'][1]
             persons.append((name, email))
-        title = self.title_entry.get()
-        ledger = model.create_ledger(title, persons)
 
-        # reset fields
-        self.reset_fields(True, True, True, True)
+        # valid quantity of persons, continue
+        if len(persons) >= 2:
+            title = self.title_entry.get()
+            ledger = model.create_ledger(title, persons)
 
-        # append ledger to app ledger collection
-        self.app.ledgers.append(ledger)
-        ledger_index = self.app.ledgers.index(ledger)
+            # reset fields
+            self.reset_fields(True, True, True, True)
 
-        # change frame with ledger object
-        self.app.raise_frame("ledger", ledger_index)
+            # append ledger to app ledger collection
+            self.app.ledgers.append(ledger)
+            ledger_index = self.app.ledgers.index(ledger)
+
+            # change frame with ledger object
+            self.app.raise_frame("ledger", ledger_index)
+
+        # invalid quantity of persons
+        else:
+            tkm.showinfo(
+                title="Unable to Create Ledger",
+                message="Ledger must have 2 or more persons to create.",
+                icon=tkm.INFO
+            )

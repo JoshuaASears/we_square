@@ -1,8 +1,11 @@
+import datetime as dt
+import json
 import tkinter as tk
-import tkinter.ttk as ttk
+import tkinter.font as tkf
 import tkinter.messagebox as tkm
-import desktop.model.db_ledger as model
+import tkinter.ttk as ttk
 
+import desktop.model.db_ledger as model
 
 width = 10
 
@@ -20,12 +23,16 @@ class Ledger(ttk.Frame):
         self.ledger = None
         self.item_index = None
         self.selected_item = tk.StringVar()
-        self.selected_paid_by = tk.StringVar()
+        self.selected_paid_by = tk.StringVar(self.app)
 
         # widget definitions
         self.header_label = ttk.Label(
             self,
-            text="[LEDGER TITLE]"
+            text="[LEDGER TITLE]",
+            font=tkf.Font(
+                size=16,
+                weight="bold"
+            )
         )
         self.shared_by_label = ttk.Label(
             self,
@@ -64,12 +71,11 @@ class Ledger(ttk.Frame):
             self,
             width=width
         )
-        self.paid_by_dropdown = ttk.Combobox(
+        self.paid_by_dropdown = ttk.OptionMenu(
             self,
-            textvariable=self.selected_paid_by,
-            width=width
+            variable=self.selected_paid_by
         )
-
+        self.paid_by_dropdown.config(width=width)
         columns = ('item', 'amount', 'date', 'paid_by')
         self.ledger_list = ttk.Treeview(
             self,
@@ -78,8 +84,11 @@ class Ledger(ttk.Frame):
             height=3,
         )
         for index, column in enumerate(columns):
-            self.ledger_list.column(index, width=width)
-
+            self.ledger_list.column(
+                index,
+                width=width,
+                anchor=tk.E
+            )
         self.add_item_button = ttk.Button(
             self,
             text="add",
@@ -244,41 +253,6 @@ class Ledger(ttk.Frame):
             sticky="WE"
         )
 
-    def update(
-            self,
-            title=False,
-            persons=False,
-            ledger_list=False,
-            summary=False
-    ):
-
-        # set title
-        if title:
-            title = model.retrieve_title(self.ledger)
-            self.header_label['text'] = title
-
-        # set persons
-        if persons:
-            person_list = model.retrieve_persons(self.ledger)
-            # label, drop down, menu buttons
-            for index, person in enumerate(person_list):
-                if index == 0:
-                    self.shared_by_list['text'] = person
-                else:
-                    self.shared_by_list['text'] += ", " + person
-            self.item_dropdown['values'] = person_list
-            self.paid_by_dropdown['values'] = person_list
-
-        # set items
-        if ledger_list:
-            item_list = model.retrieve_transactions(self.ledger)
-            for item in item_list:
-                self.ledger_list.insert('', tk.END, values=item)
-
-        # set summary
-        if summary:
-            pass
-    
     def reset_fields(
             self,
             item_dropdown=False,
@@ -294,16 +268,55 @@ class Ledger(ttk.Frame):
         if date_entry:
             self.date_entry.delete(0, tk.END)
         if paid_by_dropdown:
-            self.paid_by_dropdown.delete(0, tk.END)
+            self.paid_by_dropdown['menu'].delete(0, tk.END)
         if ledger_list:
             for index in self.ledger_list.get_children():
                 self.ledger_list.delete(index)
+
+    def update(
+            self,
+            title=False,
+            persons=False,
+            ledger_list=False,
+            summary=False
+    ):
+
+        # set title
+        if title:
+            title = model.retrieve_title(self.ledger)
+            self.header_label['text'] = title
+
+        # set persons
+        if persons:
+            person_list = model.retrieve_person_names(self.ledger)
+            # label, drop down, menu buttons
+            for index, person in enumerate(person_list):
+                if index == 0:
+                    self.shared_by_list['text'] = person
+                else:
+                    self.shared_by_list['text'] += ", " + person
+                self.paid_by_dropdown['menu'].add_command(
+                    label=person,
+                    command=tk._setit(self.selected_paid_by, person)
+                )
+            self.item_dropdown['values'] = person_list
+            self.selected_paid_by.set(person_list[0])
+
+        # set items
+        if ledger_list:
+            item_list = model.retrieve_transactions(self.ledger)
+            for item in item_list:
+                self.ledger_list.insert('', tk.END, values=item)
+
+        # set summary
+        if summary:
+            pass
 
     def add_item(self):
         item = self.item_dropdown.get()
         amount = self.amount_entry.get()
         date = self.date_entry.get()
-        paid_by = self.paid_by_dropdown.get()
+        paid_by = self.selected_paid_by.get()
 
         model.add_transaction(
             ledger=self.ledger,
@@ -317,7 +330,6 @@ class Ledger(ttk.Frame):
             item_dropdown=True,
             amount_entry=True,
             date_entry=True,
-            paid_by_dropdown=True,
             ledger_list=True
         )
         self.update(
@@ -326,7 +338,7 @@ class Ledger(ttk.Frame):
         )
 
         # restore ui state from step 2 of edit
-        if self.item_index:
+        if self.item_index is not None:
             self.add_item_button['text'] = "add"
             self.edit_item_button["state"] = tk.NORMAL
             self.delete_item_button["state"] = tk.NORMAL
@@ -337,7 +349,7 @@ class Ledger(ttk.Frame):
 
     def edit_item(self):
         if self.ledger_list.selection():
-            index = int(self.ledger_list.selection()[0][1:])
+            index = self.ledger_list.index(self.ledger_list.focus())
             self.item_index = index
             self.reset_fields(
                 item_dropdown=True,
@@ -353,7 +365,7 @@ class Ledger(ttk.Frame):
             self.item_dropdown.insert(0, item)
             self.amount_entry.insert(0, amount)
             self.date_entry.insert(0, date)
-            self.paid_by_dropdown.insert(0, paid_by)
+            self.selected_paid_by.set(paid_by)
 
             # set ui state for to force step 2 of edit via add
             self.add_item_button['text'] = "upd"
@@ -365,8 +377,10 @@ class Ledger(ttk.Frame):
 
     def delete_item(self):
         if self.ledger_list.selection():
-            index = int(self.ledger_list.selection()[0][1:])
+            index = self.ledger_list.index(self.ledger_list.focus())
             model.delete_transaction(self.ledger, index)
+        self.reset_fields(ledger_list=True)
+        self.update(ledger_list=True)
 
     def raise_select_frame(self):
         self.app.raise_frame("select")
@@ -379,8 +393,18 @@ class Ledger(ttk.Frame):
             icon=tkm.INFO
         )
         if confirmation:
-            #TODO: email
-            pass
+            title = model.retrieve_title_for_json(self.ledger)
+            summary = model.retrieve_summary_for_json(self.ledger)
+            persons = model.retrieve_persons_for_json(self.ledger)
+            ledger = model.retrieve_transactions_for_json(self.ledger)
+            date = {"date": str(dt.date.today())}
+
+            ledger_data = {"ledger": [title, summary, persons, ledger, date]}
+
+            data = json.dumps(obj=ledger_data, indent=4)
+
+            with open("sample.json", "w") as outfile:
+                outfile.write(data)
 
     def delete_ledger(self):
         confirmation = tkm.askokcancel(
