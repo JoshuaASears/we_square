@@ -1,13 +1,13 @@
 # import packages
+import os
+import pickle
 import tkinter as tk
 import tkinter.ttk as ttk
-import pickle
-import os
 
 # import app views
 from desktop.views.create import Create
-from desktop.views.select import Select
 from desktop.views.ledger import Ledger
+from desktop.views.select import Select
 
 
 class App(tk.Tk):

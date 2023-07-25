@@ -1,6 +1,7 @@
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.font as tkf
+import tkinter.ttk as ttk
+
 import desktop.model.db_select as model
 
 

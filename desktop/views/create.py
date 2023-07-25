@@ -1,6 +1,7 @@
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.messagebox as tkm
+import tkinter.ttk as ttk
+
 import desktop.model.db_create as model
 
 width = 10
