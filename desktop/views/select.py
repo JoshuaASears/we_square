@@ -1,24 +1,18 @@
+
 import tkinter as tk
 import tkinter.font as tkf
 import tkinter.ttk as ttk
 
-import desktop.model.db_select as model
-
 
 class Select(ttk.Frame):
 
-    def __init__(
-            self,
-            app,
-            frame,
-    ):
+    def __init__(self, frame, callbacks):
         super().__init__(frame)
-        self.app = app
         # temp variables
-        self.selected_ledger = tk.StringVar(self.app)
+        self._selected_ledger = tk.StringVar(self)
 
         # widget definitions
-        self.title_label = ttk.Label(
+        self._title_label = ttk.Label(
             self,
             text="We_Square?",
             font=tkf.Font(
@@ -26,27 +20,27 @@ class Select(ttk.Frame):
                 family="Impact"
             )
         )
-        self.tooltip_checkbox = ttk.Checkbutton(
+        self._tooltip_checkbox = ttk.Checkbutton(
             self,
             text="Enable Tooltips"
         )
-        self.select_label = ttk.Label(
+        self._select_label = ttk.Label(
             self,
             text="Select Existing"
         )
-        self.select_dropdown = ttk.OptionMenu(
+        self._select_dropdown = ttk.OptionMenu(
             self,
-            variable=self.selected_ledger,
+            variable=self._selected_ledger,
         )
-        self.create_button = ttk.Button(
+        self._create_button = ttk.Button(
             self,
             text="New Ledger",
-            command=self.raise_create_frame
+            command=callbacks[0]
         )
-        self.ledger_button = ttk.Button(
+        self._ledger_button = ttk.Button(
             self,
             text="View Selected",
-            command=self.raise_ledger_frame
+            command=callbacks[1]
         )
 
         # configure grid rows
@@ -59,62 +53,56 @@ class Select(ttk.Frame):
         self.grid_columnconfigure(1, weight=1)
 
         # frame layout
-        self.title_label.grid(
+        self._title_label.grid(
             column=0,
             row=0,
             columnspan=2
         )
-        self.tooltip_checkbox.grid(
+        self._tooltip_checkbox.grid(
             column=0,
             row=1,
             columnspan=1,
             sticky="W"
         )
-        self.select_label.grid(
+        self._select_label.grid(
             column=1,
             row=1,
             columnspan=1,
             sticky="w"
         )
-        self.select_dropdown.grid(
+        self._select_dropdown.grid(
             column=1,
             row=2,
             columnspan=1,
             sticky="WE"
         )
-        self.create_button.grid(
+        self._create_button.grid(
             column=0,
             row=3,
             columnspan=1,
             sticky="WE"
         )
-        self.ledger_button.grid(
+        self._ledger_button.grid(
             column=1,
             row=3,
             columnspan=1,
             sticky="WE"
         )
 
-    def update(self):
-        ledger_list = model.retrieve_ledger_titles(self.app)
-        if len(ledger_list) == 0:
-            self.selected_ledger.set('')
-            self.select_dropdown['menu'].delete(0, tk.END)
-            self.ledger_button['state'] = tk.DISABLED
-        else:
-            self.select_dropdown['menu'].delete(0, tk.END)
-            for ledger in ledger_list:
-                self.select_dropdown['menu'].add_command(
-                    label=ledger,
-                    command=tk._setit(self.selected_ledger, ledger)
-                )
-            self.selected_ledger.set(ledger_list[0])
-            self.ledger_button['state'] = tk.NORMAL
+    def get_selected_ledger(self):
+        return self._selected_ledger.get()
 
-    def raise_create_frame(self):
-        self.app.raise_frame("create")
+    def set_ledger_list(self, ledger_list):
+        self._select_dropdown['menu'].delete(0, tk.END)
+        for ledger in ledger_list:
+            self._select_dropdown['menu'].add_command(
+                label=ledger,
+                command=tk._setit(self._selected_ledger, ledger)
+            )
+        self._selected_ledger.set(ledger_list[0])
+        self._ledger_button['state'] = tk.NORMAL
 
-    def raise_ledger_frame(self):
-        title = self.selected_ledger.get()
-        index = model.retrieve_ledger_index_by_title(self.app, title)
-        self.app.raise_frame("ledger", index)
+    def disable_ledger_select(self):
+        self._selected_ledger.set('')
+        self._select_dropdown['menu'].delete(0, tk.END)
+        self._ledger_button['state'] = tk.DISABLED
