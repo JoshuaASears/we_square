@@ -1,14 +1,18 @@
 
-from desktop.data.db_connection import DBConnection
-import desktop.data.db_operations as db_operations
+from desktop.data.db_operations import DatabaseOperations
+
+import datetime
+import json
 
 class AppModel:
 
     def __init__(self):
-        self._db_connection = DBConnection()
+        self._db_connection = DatabaseOperations()
         self._current_ledger = None
         self._transaction_being_updated = None
 
+    def close_connection(self):
+        self._db_connection.close()
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
     #           GETTERS AND SETTERS
@@ -17,18 +21,15 @@ class AppModel:
     def get_current_ledger(self):
         return self._current_ledger
 
+    def set_current_ledger(self, ledger_id):
+        self._current_ledger = ledger_id
+
     def set_ledger_from_title(self, title):
-        ledger_id = db_operations.retrieve_lId_from_title(
-            cursor=self._db_connection.get_cursor(),
-            title=title
-        )
+        ledger_id = self._db_connection.retrieve_lId_from_title(title)
         self.set_current_ledger(ledger_id)
 
     def set_transaction_being_updated(self, transaction):
         self._transaction_being_updated = transaction
-
-    def set_current_ledger(self, ledger_id):
-        self._current_ledger = ledger_id
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
@@ -36,11 +37,14 @@ class AppModel:
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     def create_and_set_ledger(self, title, people):
-        ledger_id = db_operations.create_ledger(
-            db_connection=self._db_connection,
-            title=title,
-            people=people
-        )
+        self._db_connection.record_ledger(title)
+        ledger_id = self._db_connection.retrieve_lId_from_title(title)
+        for person in people:
+            self._db_connection.record_person(
+                name=person[0],
+                email=person[1],
+                ledger_id=ledger_id,
+            )
         self.set_current_ledger(ledger_id)
 
     def create_or_update_transaction(self, values):
@@ -49,8 +53,7 @@ class AppModel:
             self._transaction_being_updated = None
             return True
         else:
-            db_operations.create_transaction(
-                db_connection=self._db_connection,
+            self._db_connection.record_transaction(
                 ledger_id=self._current_ledger,
                 values=values
             )
@@ -60,47 +63,47 @@ class AppModel:
     #           RETRIEVE
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    def retrieve_ledgers_list(self):
-        ledger_list = db_operations.retrieve_ledgers_list(
-            cursor=self._db_connection.get_cursor()
-        )
-        return ledger_list
-
-    def retrieve_lId_from_title(self, title):
-        ledger_id = db_operations.retrieve_lId_from_title(
-            cursor=self._db_connection.get_cursor(),
-            title=title,
-        )
-        return ledger_id
-
-    def retrieve_title_from_lId(self):
-        title = db_operations.retrieve_title_from_lId(
-            cursor=self._db_connection.get_cursor(),
-            ledger_id=self._current_ledger
-        )
-        return title
-
-    def retrieve_people_on_ledger(self):
-        people = db_operations.retrieve_people_on_ledger(
-            cursor=self._db_connection.get_cursor(),
-            ledger_id=self._current_ledger
-        )
-        return people
-
-    def retrieve_transactions(self):
-        transactions = db_operations.retrieve_transactions(
-            cursor=self._db_connection.get_cursor(),
-            ledger_id=self._current_ledger
-        )
-        return transactions
-
     def retrieve_and_store_transaction_values(self, transaction_id):
-        transaction = db_operations.retrieve_transaction_from_tId(
-            cursor=self._db_connection.get_cursor(),
+        transaction = self._db_connection.retrieve_transaction_from_tId(
             transaction_id=transaction_id
         )
         self._transaction_being_updated = transaction
         return transaction[1:]
+
+    def retrieve_ledgers_list(self):
+        ledger_list = self._db_connection.retrieve_ledgers_titles(
+        )
+        return ledger_list
+
+    def retrieve_lId_from_title(self, title):
+        ledger_id = self._db_connection.retrieve_lId_from_title(
+            title=title,
+        )
+        return ledger_id
+
+    def retrieve_people_name_and_email(self):
+        people_name_and_email = self._db_connection.retrieve_people_and_email_by_lId(
+            ledger_id=self._current_ledger
+        )
+        return people_name_and_email
+
+    def retrieve_people_on_ledger(self):
+        people = self._db_connection.retrieve_people_by_lId(
+            ledger_id=self._current_ledger
+        )
+        return people
+
+    def retrieve_title_from_lId(self):
+        title = self._db_connection.retrieve_title_from_lId(
+            ledger_id=self._current_ledger
+        )
+        return title
+
+    def retrieve_transactions(self):
+        transactions = self._db_connection.retrieve_transactions_by_lId(
+            ledger_id=self._current_ledger
+        )
+        return transactions
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
@@ -108,16 +111,14 @@ class AppModel:
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     def update_transaction(self, values):
-        db_operations.update_transaction(
-            db_connection=self._db_connection,
+        self._db_connection.update_transaction(
             transaction_id=self._transaction_being_updated[0],
             old_values=self._transaction_being_updated[1:],
             new_values=values,
         )
 
     def mark_transaction_deleted(self, transaction_id):
-        db_operations.mark_transaction_deleted(
-            db_connection=self._db_connection,
+        self._db_connection.update_transaction_deleted(
             transaction_id=transaction_id
         )
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -126,8 +127,7 @@ class AppModel:
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     def delete_ledger(self):
-        db_operations.delete_ledger(
-            db_connection=self._db_connection,
+        self._db_connection.delete_ledger(
             ledger_id=self._current_ledger
         )
         self._current_ledger = None
@@ -142,16 +142,61 @@ class AppModel:
         summary = ""
         return summary
 
-    def send_ledger():
-        title = model.retrieve_title_for_json(self.app.current_ledger)
-        summary = model.retrieve_summary_for_json(self.app.current_ledger)
-        persons = model.retrieve_persons_for_json(self.app.current_ledger)
-        ledger = model.retrieve_transactions_for_json(self.app.current_ledger)
-        date = {"date": str(dt.date.today())}
+    def get_modified_transactions(self):
+        transactions = self.retrieve_transactions()
+        # present transaction values with edited/deleted markup
+        modified_transactions = []
+        for transaction in transactions:
+            item = transaction[1]
+            amount = transaction[2]
+            date = transaction[3]
+            paidBy = transaction[4]
+            if transaction[5]:
+                item += "*"
+            if transaction[6]:
+                amount += "*"
+            if transaction[7]:
+                date += "*"
+            if transaction[8]:
+                paidBy += "*"
+            if transaction[9]:
+                item = "(X)" + item
+            modified_transactions.append((
+                transaction[0], item, amount, date, paidBy))
+        return modified_transactions
 
-        ledger_data = {"ledger": [title, summary, persons, ledger, date]}
+    def convert_people_data_for_json(self):
+        people_data = self.retrieve_people_name_and_email()
+        people = {"people": []}
+        for person_data in people_data:
+            people["people"].append({
+                "name": person_data[0],
+                "email": person_data[1]})
+        return people
+
+    def convert_transactions_for_json(self):
+        transaction_data = self.get_modified_transactions()
+        transactions = {"items": []}
+        for transaction in transaction_data:
+            transactions["items"].append(
+                {
+                "item": transaction[1],
+                "amount": transaction[2],
+                "date": transaction[3],
+                "paid_by": transaction[4],
+            })
+        return transactions
+
+    def send_ledger(self):
+        title = {"title": self.retrieve_title_from_lId()}
+        summary = {"summary": "[PLACEHOLDER FOR NOW]"}
+        people = self.convert_people_data_for_json()
+        transactions = self.convert_transactions_for_json()
+        date = {"date": str(datetime.date.today())}
+
+        ledger_data = {"ledger": [title, summary, people, transactions, date]}
 
         data = json.dumps(obj=ledger_data, indent=4)
 
-        with open("sample.json", "w") as outfile:
+        with open("new_sample.json", "w") as outfile:
             outfile.write(data)

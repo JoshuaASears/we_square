@@ -155,7 +155,7 @@ class Create(ttk.Frame):
         for row in self._name_list.get_children():
             name = self._name_list.item(row)['values'][0]
             email = self._name_list.item(row)['values'][1]
-            people.append({"name": name, "email": email})
+            people.append((name, email))
         return people
 
     def get_title(self):

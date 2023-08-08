@@ -69,6 +69,7 @@ class App(tk.Tk):
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     def exit_handler(self):
+        self._app_model.close_connection()
         self.destroy()
 
     def raise_frame(self, frame):
@@ -147,7 +148,7 @@ class App(tk.Tk):
 
     # # # 'ledger' VIEW FUNCTIONS
     def ledger_set_transaction_and_summary(self):
-        transactions = self._app_model.retrieve_transactions()
+        transactions = self._app_model.get_modified_transactions()
         self.frames["ledger"].set_transactions(transactions)
         summary = self._app_model.make_summary()
         self.frames["ledger"].set_summary(summary)
@@ -183,7 +184,6 @@ class App(tk.Tk):
             self.frames["ledger"].set_item_values(
                 transaction_values=values
             )
-            self._app_model.set_transaction_being_updated(values)
             self.frames["ledger"].limit_state()
 
     def ledger_frame_delete_transaction(self):
