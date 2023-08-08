@@ -163,6 +163,7 @@ class App(tk.Tk):
     def ledger_frame_add_transaction(self):
         # get and add values
         values = self.frames["ledger"].get_new_transaction_values()
+        #TODO: validate values, if invalid create popup
         restore_state = self._app_model.create_or_update_transaction(values)
         if restore_state:
             self.frames["ledger"].restore_state()

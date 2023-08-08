@@ -139,6 +139,7 @@ class AppModel:
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     @staticmethod
     def make_summary():
+        #TODO: calculations from ledger for string
         summary = ""
         return summary
 
@@ -196,7 +197,10 @@ class AppModel:
 
         ledger_data = {"ledger": [title, summary, people, transactions, date]}
 
+        #TODO: Incorporate microservice templater and send email
+
         data = json.dumps(obj=ledger_data, indent=4)
 
         with open("new_sample.json", "w") as outfile:
             outfile.write(data)
+
