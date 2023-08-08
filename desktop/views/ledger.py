@@ -24,11 +24,11 @@ class Ledger(ttk.Frame):
                 weight="bold"
             )
         )
-        self._shared_by_label = ttk.Label(
+        self._names_label = ttk.Label(
             self,
             text="Shared by:"
         )
-        self._shared_by_list = ttk.Label(
+        self._names_list = ttk.Label(
             self,
             text="[NAMES ON LEDGER]"
         )
@@ -66,7 +66,7 @@ class Ledger(ttk.Frame):
             variable=self._selected_paid_by
         )
         self._paid_by_dropdown.config(width=width)
-        columns = ('tId', 'item', 'amount', 'date', 'paid_by')
+        columns = ('transaction_id', 'item', 'amount', 'date', 'paid_by')
         self._transactions = ttk.Treeview(
             self,
             columns=columns,
@@ -132,13 +132,13 @@ class Ledger(ttk.Frame):
             columnspan=4,
             sticky="WE"
         )
-        self._shared_by_label.grid(
+        self._names_label.grid(
             column=0,
             row=1,
             columnspan=1,
             sticky="W"
         )
-        self._shared_by_list.grid(
+        self._names_list.grid(
             column=1,
             row=1,
             columnspan=3,
@@ -245,11 +245,11 @@ class Ledger(ttk.Frame):
         )
 
     def get_new_transaction_values(self):
-        item = self._item_dropdown.get()
-        amount = self._amount_entry.get()
-        date = self._date_entry.get()
-        paid_by = self._selected_paid_by.get()
-        return [item, amount, date, paid_by]
+        item = self._item_dropdown.get().strip()
+        amount = self._amount_entry.get().strip()
+        date = self._date_entry.get().strip()
+        paid_by = self._selected_paid_by.get().strip()
+        return item, amount, date, paid_by
 
     def get_selected_transaction_id(self):
         row = self._transactions.selection()[0]
@@ -265,9 +265,9 @@ class Ledger(ttk.Frame):
     def set_people(self, people):
         for index, person in enumerate(people):
             if index == 0:
-                self._shared_by_list['text'] = person
+                self._names_list['text'] = person
             else:
-                self._shared_by_list['text'] += ", " + person
+                self._names_list['text'] += ", " + person
             self._paid_by_dropdown['menu'].add_command(
                 label=person,
                 command=tk._setit(self._selected_paid_by, person)
@@ -281,9 +281,9 @@ class Ledger(ttk.Frame):
     def set_title(self, title):
         self._header_label['text'] = title
 
-    def set_transactions(self, item_list):
-        for item in item_list:
-            self._transactions.insert('', tk.END, values=item)
+    def set_transactions(self, transactions):
+        for transaction in transactions:
+            self._transactions.insert('', tk.END, values=transaction)
 
     def reset_fields(self, 
             item_amount_and_date=False, paid_by=False, ledger_list=False):
@@ -294,6 +294,8 @@ class Ledger(ttk.Frame):
         if paid_by:
             self._paid_by_dropdown['menu'].delete(0, tk.END)
         if ledger_list:
+            self._amount_entry.insert(0, "0.00")
+            self._date_entry.insert(0, "YYYY-MM-DD")
             for index in self._transactions.get_children():
                 self._transactions.delete(index)
 

@@ -153,13 +153,13 @@ class Create(ttk.Frame):
     def get_people(self):
         people = []
         for row in self._name_list.get_children():
-            name = self._name_list.item(row)['values'][0]
-            email = self._name_list.item(row)['values'][1]
+            name = self._name_list.item(row)['values'][0].strip()
+            email = self._name_list.item(row)['values'][1].strip()
             people.append((name, email))
         return people
 
     def get_title(self):
-        return self._title_entry.get()
+        return self._title_entry.get().strip()
 
     def reset_fields(self, name_and_email=False, title_and_list=False):
         if name_and_email:

@@ -13,6 +13,7 @@ class DatabaseOperations:
     def close(self):
         self._connection.commit()
         self._connection.close()
+
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
     #           CREATE, SET, UPDATE, DELETE
@@ -24,7 +25,16 @@ class DatabaseOperations:
         self._cursor.executescript(sql_script)
         self._connection.commit()
 
-    def record_ledger(self, title):
+    def delete_ledger(self, ledger_id: int):
+        sql = """
+                DELETE FROM ledgers
+                where ledger_id = ?;
+                """
+        parameters = (ledger_id,)
+        self._cursor.execute(sql, parameters)
+        self._connection.commit()
+
+    def record_ledger(self, title: str):
         sql = """
             INSERT INTO ledgers(title)
             VALUES(?);
@@ -33,65 +43,59 @@ class DatabaseOperations:
         self._cursor.execute(sql, parameters)
         self._connection.commit()
 
-    def record_person(self, name, email, ledger_id):
+    def record_person(self, name: str, email: str, ledger_id: int):
         sql = """
-            INSERT INTO people(name, email, ledgerId)
+            INSERT INTO people(name, email, ledger_id)
             VALUES (?, ?, ?);
         """
         parameters = (name, email, ledger_id)
         self._cursor.execute(sql, parameters)
         self._connection.commit()
 
-    def delete_ledger(self, ledger_id):
+    def record_transaction(self, ledger_id: int,
+                           values: tuple[str, str, str, str]):
         sql = """
-                DELETE FROM ledgers
-                where lId = ?;
-                """
-        parameters = (ledger_id,)
-        self._cursor.execute(sql, parameters)
-        self._connection.commit()
-
-    def record_transaction(self, ledger_id, values):
-        sql = """
-            INSERT INTO transactions(ledgerId, item, amount, date, paidBy)
+            INSERT INTO transactions(ledger_id, item, amount, date, paid_by)
             VALUES(?, ?, ?, ?, ?);
         """
         parameters = (ledger_id, values[0], values[1], values[2], values[3])
         self._cursor.execute(sql, parameters)
         self._connection.commit()
 
-    def update_transaction(self, transaction_id, old_values, new_values):
+    def update_transaction(self, transaction_id: int,
+                           old_values: tuple[str, str, str, str],
+                           new_values: tuple[str, str, str, str]):
         columns = []
         values = []
         # compare and add to update if new
         if new_values[0] != old_values[0]:
-            columns = columns + ["item", "itemEdited", ]
+            columns = columns + ["item", "item_edited", ]
             values = values + [new_values[0], 1]
         if new_values[1] != old_values[1]:
-            columns = columns + ["amount", "amountEdited", ]
+            columns = columns + ["amount", "amount_edited", ]
             values = values + [new_values[1], 1]
         if new_values[2] != old_values[2]:
-            columns = columns + ["date", "dateEdited", ]
+            columns = columns + ["date", "date_edited", ]
             values = values + [new_values[2], 1]
         if new_values[3] != old_values[3]:
-            columns = columns + ["paidBy", "paidByEdited", ]
+            columns = columns + ["paid_by", "paid_by_edited", ]
             values = values + [new_values[3], 1]
+        if columns:
+            sql = "UPDATE transactions SET "
+            for index in range(len(columns)):
+                sql += str(columns[index]) + " = '" + str(values[index]) + "'"
+                if index != len(columns) - 1:
+                    sql += ", "
+            sql +=" WHERE transaction_id = ?;"
+            parameters = (transaction_id,)
+            self._cursor.execute(sql, parameters)
+            self._connection.commit()
 
-        sql = "UPDATE transactions SET "
-        for index in range(len(columns)):
-            sql += str(columns[index]) + " = '" + str(values[index]) + "'"
-            if index != len(columns) - 1:
-                sql += ", "
-        sql +=" WHERE tId = ?;"
-        parameters = (transaction_id,)
-        self._cursor.execute(sql, parameters)
-        self._connection.commit()
-
-    def update_transaction_deleted(self, transaction_id):
+    def update_transaction_deleted(self, transaction_id: int):
         sql = """
             UPDATE transactions
             SET deleted = 1
-            WHERE tId = ?;
+            WHERE transaction_id = ?;
         """
         parameters = (transaction_id,)
         self._cursor.execute(sql, parameters)
@@ -102,9 +106,10 @@ class DatabaseOperations:
     #           SELECT
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    def retrieve_lId_from_title(self, title):
+    def retrieve_ledger_id_from_title(self, title: str) -> int | None:
+        """Takes a str. Returns int or None."""
         sql = """
-            SELECT lId
+            SELECT ledger_id
             FROM ledgers
             WHERE title = ?;
             """
@@ -117,18 +122,20 @@ class DatabaseOperations:
             return ledger_id[0]
         return None
 
-    def retrieve_title_from_lId(self, ledger_id):
+    def retrieve_title_from_ledger_id(self, ledger_id: int) -> str:
+        """Takes an int. Returns str."""
         sql = """
             SELECT title
             FROM ledgers
-            WHERE lId = ?;
+            WHERE ledger_id = ?;
             """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
         title = results.fetchone()[0]
         return title
 
-    def retrieve_ledgers_titles(self):
+    def retrieve_ledgers_titles(self) -> list[str]:
+        """Returns ["title1", "title2",...]"""
         sql = """
             SELECT title
             FROM ledgers;
@@ -139,11 +146,12 @@ class DatabaseOperations:
         ledgers_list = [x[0] for x in ledgers_list]
         return ledgers_list
 
-    def retrieve_people_by_lId(self, ledger_id):
+    def retrieve_names_by_ledger_id(self, ledger_id: int) -> list[str]:
+        """Takes int. Returns ["name1", "name2",...]"""
         sql = """
             SELECT name
             FROM people
-            where ledgerId = ?;
+            where ledger_id = ?;
             """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
@@ -151,43 +159,55 @@ class DatabaseOperations:
         people = [x[0] for x in people]
         return people
 
-    def retrieve_people_and_email_by_lId(self, ledger_id):
+    def retrieve_names_and_email_by_ledger_id(self, ledger_id: int) \
+            -> list[tuple[str, str]]:
+        """Takes int. Returns [("name1", "email1"), ("name2", "email2"),...]"""
         sql = """
                     SELECT name, email
                     FROM people
-                    where ledgerId = ?;
+                    where ledger_id = ?;
                     """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
         people = results.fetchall()
         return people
 
-    def retrieve_transactions_by_lId(self, ledger_id):
+    def retrieve_transactions_by_ledger_id(self, ledger_id: int) \
+            -> list[tuple[int, str, str, str, str, int, int, int, int, int]]:
+        """
+        Takes int. Returns [(transaction1), (transaction2),...]
+        where transaction is a 10-tuple with the following indexing:
+            [0]: transaction_id1,
+            [1]: "item",        [2] "amount",           [3]: "date",
+            [4] "paid_by",      [5]: item_edited,       [6]: amount_edited,
+            [7]: date_edited,   [8]: paid_by_edited,    [9] deleted
+        and indexes 5-9 are 0 or 1 integers as boolean values.
+        """
         sql = """
             SELECT 
-                tId, 
-                item, amount, date, paidBy,
-                itemEdited, amountEdited, dateEdited, paidByEdited,
+                transaction_id, 
+                item, amount, date, paid_by,
+                item_edited, amount_edited, date_edited, paid_by_edited,
                 deleted
             FROM transactions
-            WHERE ledgerId = ?;
+            WHERE ledger_id = ?;
             """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
         transactions = results.fetchall()
         return transactions
 
-    def retrieve_transaction_from_tId(self, transaction_id):
+    def retrieve_transaction_from_transaction_id(self, transaction_id: int) \
+        -> tuple[str, str, str, str]:
+        """Takes an int.
+        Returns ("item", "amount", "date", "paid_by")"
+        """
         sql = """
-            SELECT tId, item, amount, date, paidBy
+            SELECT item, amount, date, paid_by
             FROM transactions
-            WHERE tId = ?;
+            WHERE transaction_id = ?;
             """
         parameters = (transaction_id,)
         results = self._cursor.execute(sql, parameters)
         transaction = results.fetchone()
         return transaction
-
-    def get_ledger_summary(self):
-        pass
-

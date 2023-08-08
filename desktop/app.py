@@ -7,6 +7,7 @@ from desktop.views.ledger import Ledger
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as tkm
+import re
 
 
 class App(tk.Tk):
@@ -123,7 +124,7 @@ class App(tk.Tk):
             title = self.frames["create"].get_title()
 
             # validate unique title
-            ledger_id =  self._app_model.retrieve_lId_from_title(title)
+            ledger_id =  self._app_model.retrieve_ledger_id_from_title(title)
             if ledger_id is None:
                 # create new ledger and change frame
                 self._app_model.create_and_set_ledger(title, people)
@@ -154,25 +155,45 @@ class App(tk.Tk):
         self.frames["ledger"].set_summary(summary)
 
     def ledger_set_title_and_people(self):
-        title = self._app_model.retrieve_title_from_lId()
+        title = self._app_model.retrieve_title_from_ledger_id()
         self.frames["ledger"].set_title(title)
-        people = self._app_model.retrieve_people_on_ledger()
+        people = self._app_model.retrieve_names_on_ledger()
         self.frames["ledger"].set_people(people)
+
+    @staticmethod
+    def validate_transaction_values(values):
+        # 'item'
+        if len(values[0]) < 1:
+            return "Transaction must have item."
+        # 'amount'
+        if not re.match('^\d*\.\d{1,2}$', values[1]) and \
+                not re.match('^\d+$', values[1]):
+            return "Amount must contain only integers or a single decimal."
+        # 'date'
+        if not re.match('^\d{4}-\d{2}-\d{2}$', values[2]):
+            return "Date must be formatted: YYYY-MM-DD."
+        return None
 
     # # # 'ledger' VIEW CALLBACKS
     def ledger_frame_add_transaction(self):
-        # get and add values
         values = self.frames["ledger"].get_new_transaction_values()
-        #TODO: validate values, if invalid create popup
-        restore_state = self._app_model.create_or_update_transaction(values)
-        if restore_state:
-            self.frames["ledger"].restore_state()
-        # reset fields and set data
-        self.frames["ledger"].reset_fields(
-            item_amount_and_date=True,
-            ledger_list=True
-        )
-        self.ledger_set_transaction_and_summary()
+        invalidation_message = self.validate_transaction_values(values)
+        if invalidation_message:
+            tkm.showinfo(
+                title="Invalid transaction record",
+                message=f'{invalidation_message}',
+                icon=tkm.INFO
+            )
+        else:
+            self.frames["ledger"].reset_fields(
+                item_amount_and_date=True,
+                ledger_list=True
+            )
+            restore_state = self._app_model.create_or_update_transaction(
+                values)
+            if restore_state:
+                self.frames["ledger"].restore_state()
+            self.ledger_set_transaction_and_summary()
 
     def ledger_frame_edit_transaction(self):
         if self.frames["ledger"].is_transaction_selected():
