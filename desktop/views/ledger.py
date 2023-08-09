@@ -266,16 +266,13 @@ class Ledger(ttk.Frame):
 
     def set_people(self, people):
         for index, person in enumerate(people):
-            if index == 0:
-                self._names_list['text'] = person
-            else:
-                self._names_list['text'] += ", " + person
             self._paid_by_dropdown['menu'].add_command(
                 label=person,
                 command=tk._setit(self._selected_paid_by, person)
             )
         self._item_dropdown['values'] = people
         self._selected_paid_by.set(people[0])
+        self._names_list['text'] = ', '.join(people)
 
     def set_summary(self, summary):
         self._summary_label['text'] = summary

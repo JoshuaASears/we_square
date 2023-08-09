@@ -198,13 +198,12 @@ class AppModel:
                 if expense_difference < 0:
                     summary += \
                         f"{people[index]} is owed " + \
-                        f"${abs(expense_difference)}.\n"
+                        f"${abs(expense_difference)}. "
                 elif expense_difference > .02:
                     summary += \
-                        f"{people[index]} owes ${abs(expense_difference)}.\n"
+                        f"{people[index]} owes ${abs(expense_difference)}. "
         if we_square:
             summary += "We_Square!"
-        print(summary)
         return summary
 
     def get_modified_transactions(self) -> list[tuple[int, str, str, str, str]]:
@@ -262,26 +261,35 @@ class AppModel:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((HOST, PORT))
         print(f"Connected to server: {HOST}:{PORT}...")
-        print(f"\tSending Ledger to server.")
-        client_socket.send(ledger_json.encode())
-        print("\tSent Ledger to server successfully.")
 
-        # receive html template
-        html_doc = ''
-        while True:
-            print("Receiving...")
-            response = client_socket.recv(1024).decode()
-            html_doc += response
+        # application handshake (client message length verification)
+        message_length = str(len(ledger_json))
+        print(f"\n\tSending message length {message_length}...")
+        client_socket.send(message_length.encode())
+        print(f"\tReceiving length confirmation....")
+        length_verification = client_socket.recv(1024).decode()
+        print(f"\tReceived message length {length_verification}...")
 
-            if not response:
-                print(f'HTML received from server: {html_doc} \n')
-                client_socket.close()
-                break
+        # application message transmission and service reception
+        html_doc =''
+        if length_verification == message_length:
+            print(f"\n\tVerification successful, sending Ledger to server.")
+            client_socket.send(ledger_json.encode())
+            print("\tSent Ledger to server successfully.")
+            while True:
+                print("\tReceiving...")
+                response = client_socket.recv(1024).decode()
+                html_doc += response
 
+                if not response:
+                    print(f'\nFinished receiving, closing socket.')
+                    break
+        else:
+            print(f"\n\tVerification unsuccessful. Closing connection")
+        client_socket.close()
         return html_doc
 
     def send_ledger(self):
-
         ledger_data = {
             "ledger": {
                 "title": self.retrieve_title_from_ledger_id(),
@@ -293,11 +301,6 @@ class AppModel:
         }
         ledger_json = json.dumps(obj=ledger_data, indent=4)
 
-        print(ledger_json)
-        with open("new_sample.json", "w") as output:
-            output.write(ledger_json)
-
-        # html_doc = self.call_template_service(ledger_json)
-        #
-        # with open("email.html", "w") as output:
-        #     output.write(html_doc)
+        html_doc = self.call_template_service(ledger_json)
+        with open("email.html", "w") as output:
+            output.write(html_doc)

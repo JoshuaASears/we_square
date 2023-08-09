@@ -163,10 +163,10 @@ class DatabaseOperations:
             -> list[tuple[str, str]]:
         """Takes int. Returns [("name1", "email1"), ("name2", "email2"),...]"""
         sql = """
-                    SELECT name, email
-                    FROM people
-                    where ledger_id = ?;
-                    """
+            SELECT name, email
+            FROM people
+            where ledger_id = ?;
+            """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
         people = results.fetchall()
