@@ -3,6 +3,8 @@ from desktop.data.db_operations import DatabaseOperations
 
 import datetime
 import json
+import math
+import socket
 
 class AppModel:
 
@@ -159,7 +161,7 @@ class AppModel:
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     def make_summary(self):
-        expense_total = 0
+        expense_total = 0.00
         people = self.retrieve_names_on_ledger()
         number_of_people = len(people)
         contributions = [0] * number_of_people
@@ -183,20 +185,26 @@ class AppModel:
                     index = people.index(transaction["paid_by"])
                     contributions[index] += float(transaction["amount"])
 
+        expense_total = round(expense_total, 2)
         expense_per_person = round((expense_total / number_of_people), 2)
-        summary = ""
+        summary = f"Expense total: ${expense_total}\t" + \
+                f"Total per person: ${expense_per_person}\n"
+        we_square = True
         for index in range(len(people)):
             expense_difference = \
                 round(expense_per_person - contributions[index], 2)
-            if expense_difference < 0:
-                summary += \
-                    f"{people[index]} is owed ${abs(expense_difference)}. "
-            elif expense_difference > .02:
-                summary += \
-                    f"{people[index]} owes ${abs(expense_difference)}. "
-        if summary == "":
-            summary = "We_Square!"
-
+            if not math.isclose(expense_difference, 0.00, abs_tol=1.00):
+                we_square = False
+                if expense_difference < 0:
+                    summary += \
+                        f"{people[index]} is owed " + \
+                        f"${abs(expense_difference)}.\n"
+                elif expense_difference > .02:
+                    summary += \
+                        f"{people[index]} owes ${abs(expense_difference)}.\n"
+        if we_square:
+            summary += "We_Square!"
+        print(summary)
         return summary
 
     def get_modified_transactions(self) -> list[tuple[int, str, str, str, str]]:
@@ -221,20 +229,23 @@ class AppModel:
                 transaction["paid_by"]))
         return modified_transactions
 
-    def convert_people_data_for_json(self) -> dict:
+    def convert_people_data_for_json(self) -> list[dict]:
         people_data = self.retrieve_people_name_and_email()
-        people = {"people": []}
+        people = []
         for person_data in people_data:
-            people["people"].append({
-                "name": person_data[0],
-                "email": person_data[1]})
+            people.append(
+                {
+                    "name": person_data[0],
+                    "email": person_data[1]
+                }
+            )
         return people
 
-    def convert_transactions_for_json(self) -> dict:
+    def convert_transactions_for_json(self) -> list[dict]:
         transaction_data = self.get_modified_transactions()
-        transactions = {"items": []}
+        transactions = []
         for transaction in transaction_data:
-            transactions["items"].append(
+            transactions.append(
                 {
                 "item": transaction[1],
                 "amount": transaction[2],
@@ -243,19 +254,50 @@ class AppModel:
             })
         return transactions
 
+    @staticmethod
+    def call_template_service(ledger_json):
+        # socket connection
+        HOST = 'localhost'
+        PORT = 65432
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((HOST, PORT))
+        print(f"Connected to server: {HOST}:{PORT}...")
+        print(f"\tSending Ledger to server.")
+        client_socket.send(ledger_json.encode())
+        print("\tSent Ledger to server successfully.")
+
+        # receive html template
+        html_doc = ''
+        while True:
+            print("Receiving...")
+            response = client_socket.recv(1024).decode()
+            html_doc += response
+
+            if not response:
+                print(f'HTML received from server: {html_doc} \n')
+                client_socket.close()
+                break
+
+        return html_doc
+
     def send_ledger(self):
-        title = {"title": self.retrieve_title_from_ledger_id()}
-        summary = {"summary": self.make_summary()}
-        people = self.convert_people_data_for_json()
-        transactions = self.convert_transactions_for_json()
-        date = {"date": str(datetime.date.today())}
 
-        ledger_data = {"ledger": [title, summary, people, transactions, date]}
+        ledger_data = {
+            "ledger": {
+                "title": self.retrieve_title_from_ledger_id(),
+                "date": str(datetime.date.today()),
+                "people": self.convert_people_data_for_json(),
+                "summary": self.make_summary(),
+                "transactions": self.convert_transactions_for_json()
+            }
+        }
+        ledger_json = json.dumps(obj=ledger_data, indent=4)
 
-        #TODO: Incorporate microservice templater and send email
+        print(ledger_json)
+        with open("new_sample.json", "w") as output:
+            output.write(ledger_json)
 
-        data = json.dumps(obj=ledger_data, indent=4)
-
-        with open("new_sample.json", "w") as outfile:
-            outfile.write(data)
-
+        # html_doc = self.call_template_service(ledger_json)
+        #
+        # with open("email.html", "w") as output:
+        #     output.write(html_doc)

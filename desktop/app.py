@@ -81,6 +81,7 @@ class App(tk.Tk):
         # for transitioning to ledger view: set all ledger data
         elif frame == "ledger":
             self.frames["ledger"].reset_fields(True, True, True)
+            self.frames["ledger"].set_value_hints()
             self.ledger_set_title_and_people()
             self.ledger_set_transaction_and_summary()
 
@@ -117,35 +118,41 @@ class App(tk.Tk):
 
     # # # 'create' VIEW CALL BACKS
     def create_frame_create_new_ledger(self):
+        # validate title length
+        title = self.frames["create"].get_title()
+        if not 0 < len(title) < 16:
+            tkm.showinfo(
+                title="Unable to Create Ledger",
+                message=f'Title must be between 1 and 15 characters, inclusive.',
+                icon=tkm.INFO
+            )
+            return
+
+        # validate title uniqueness
+        ledger_id = self._app_model.retrieve_ledger_id_from_title(title)
+        if ledger_id:
+            tkm.showinfo(
+                title="Unable to Create Ledger",
+                message=f'Title "{title}" already in use.'
+                        f'\nTitle must be unique',
+                icon=tkm.INFO
+            )
+            return
+
+        # validate quantity of people
         people = self.frames["create"].get_people()
-
-        # validate quantity of people, continue
-        if len(people) >= 2:
-            title = self.frames["create"].get_title()
-
-            # validate unique title
-            ledger_id =  self._app_model.retrieve_ledger_id_from_title(title)
-            if ledger_id is None:
-                # create new ledger and change frame
-                self._app_model.create_and_set_ledger(title, people)
-                self.frames["create"].reset_fields(True, True)
-                self.raise_frame("ledger")
-
-            # ledger title is not unique, show warning
-            else:
-                tkm.showinfo(
-                    title="Unable to Create Ledger",
-                    message=f'Ledger "{title}" already in use.'
-                            f'\nTitle must be unique',
-                    icon=tkm.INFO
-                )
-        # invalid quantity of people
-        else:
+        if len(people) < 2:
             tkm.showinfo(
                 title="Unable to Create Ledger",
                 message="Ledger must have 2 or more people to create.",
                 icon=tkm.INFO
             )
+            return
+
+        # create new ledger and change frame
+        self._app_model.create_and_set_ledger(title, people)
+        self.frames["create"].reset_fields(True, True)
+        self.raise_frame("ledger")
 
     # # # 'ledger' VIEW FUNCTIONS
     def ledger_set_transaction_and_summary(self):
@@ -163,8 +170,8 @@ class App(tk.Tk):
     @staticmethod
     def validate_transaction_values(values):
         # 'item'
-        if len(values[0]) < 1:
-            return "Transaction must have item."
+        if not 0 < len(values[0]) < 11:
+            return "Item must be between 1 and 10 characters, inclusive."
         # 'amount'
         if not re.match('^\d*\.\d{1,2}$', values[1]) and \
                 not re.match('^\d+$', values[1]):

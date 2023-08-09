@@ -1,4 +1,5 @@
 
+import datetime
 import tkinter as tk
 import tkinter.font as tkf
 import tkinter.ttk as ttk
@@ -22,7 +23,8 @@ class Ledger(ttk.Frame):
             font=tkf.Font(
                 size=16,
                 weight="bold"
-            )
+            ),
+
         )
         self._names_label = ttk.Label(
             self,
@@ -100,7 +102,7 @@ class Ledger(ttk.Frame):
         )
         self._summary_label = ttk.Label(
             self,
-            text="[LEDGER SUMMARY]",
+            text="\n",
         )
         self._select_button = ttk.Button(
             self,
@@ -278,6 +280,10 @@ class Ledger(ttk.Frame):
     def set_summary(self, summary):
         self._summary_label['text'] = summary
 
+    def set_value_hints(self):
+        self._amount_entry.insert(0, "0.00")
+        self._date_entry.insert(0, str(datetime.date.today()))
+
     def set_title(self, title):
         self._header_label['text'] = title
 
@@ -294,8 +300,6 @@ class Ledger(ttk.Frame):
         if paid_by:
             self._paid_by_dropdown['menu'].delete(0, tk.END)
         if ledger_list:
-            self._amount_entry.insert(0, "0.00")
-            self._date_entry.insert(0, "YYYY-MM-DD")
             for index in self._transactions.get_children():
                 self._transactions.delete(index)
 
@@ -314,7 +318,6 @@ class Ledger(ttk.Frame):
         self._select_button["state"] = tk.NORMAL
         self._send_button["state"] = tk.NORMAL
         self._delete_ledger_button["state"] = tk.NORMAL
-
 
     def is_transaction_selected(self):
         if self._transactions.selection():

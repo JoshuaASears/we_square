@@ -1,7 +1,7 @@
 
 import tkinter as tk
 import tkinter.ttk as ttk
-
+import tkinter.messagebox as tkm
 
 width = 10
 
@@ -174,6 +174,20 @@ class Create(ttk.Frame):
         # get string data from fields and add
         name = self._name_entry.get()
         email = self._email_entry.get()
+        if not 0 < len(name) < 16:
+            tkm.showinfo(
+                title="Unable to add person",
+                message="Name must be between 1 and 15 characters, inclusive.",
+                icon=tkm.INFO
+            )
+            return
+        if not 5 < len(email) < 30:
+            tkm.showinfo(
+                title="Unable to add person",
+                message="Please enter valid email.",
+                icon=tkm.INFO
+            )
+            return
         self._name_list.insert('', tk.END, values=(name, email))
 
         # clear old string data from fields

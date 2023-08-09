@@ -31,16 +31,17 @@ class Select(ttk.Frame):
         self._select_dropdown = ttk.OptionMenu(
             self,
             variable=self._selected_ledger,
+
         )
         self._create_button = ttk.Button(
             self,
             text="New Ledger",
-            command=callbacks[0]
+            command=callbacks[0],
         )
         self._ledger_button = ttk.Button(
             self,
             text="View Selected",
-            command=callbacks[1]
+            command=callbacks[1],
         )
 
         # configure grid rows
