@@ -1,10 +1,10 @@
 
 from desktop.data.db_operations import DatabaseOperations
+from desktop.model.client_protocols import get_email_body, temp_web_handler
 
 import datetime
 import json
 import math
-import socket
 
 class AppModel:
 
@@ -253,43 +253,8 @@ class AppModel:
             })
         return transactions
 
-    @staticmethod
-    def call_template_service(ledger_json):
-        # socket connection
-        HOST = 'localhost'
-        PORT = 65432
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((HOST, PORT))
-        print(f"Connected to server: {HOST}:{PORT}...")
-
-        # application handshake (client message length verification)
-        message_length = str(len(ledger_json))
-        print(f"\n\tSending message length {message_length}...")
-        client_socket.send(message_length.encode())
-        print(f"\tReceiving length confirmation....")
-        length_verification = client_socket.recv(1024).decode()
-        print(f"\tReceived message length {length_verification}...")
-
-        # application message transmission and service reception
-        html_doc =''
-        if length_verification == message_length:
-            print(f"\n\tVerification successful, sending Ledger to server.")
-            client_socket.send(ledger_json.encode())
-            print("\tSent Ledger to server successfully.")
-            while True:
-                print("\tReceiving...")
-                response = client_socket.recv(1024).decode()
-                html_doc += response
-
-                if not response:
-                    print(f'\nFinished receiving, closing socket.')
-                    break
-        else:
-            print(f"\n\tVerification unsuccessful. Closing connection")
-        client_socket.close()
-        return html_doc
-
     def send_ledger(self):
+        # convert ledger data to json for template engine
         ledger_data = {
             "ledger": {
                 "title": self.retrieve_title_from_ledger_id(),
@@ -300,7 +265,22 @@ class AppModel:
             }
         }
         ledger_json = json.dumps(obj=ledger_data, indent=4)
+        with open(".\\resources\\sample.json", "w") as output:
+            output.write(ledger_json)
 
-        html_doc = self.call_template_service(ledger_json)
-        with open("email.html", "w") as output:
-            output.write(html_doc)
+        # get email body from template engine
+        message = get_email_body(ledger_json)
+        with open(".\\resources\\email.html", "w") as output:
+            output.write(message)
+
+        temp_web_handler(".\\resources\\email.html")
+
+        #TODO: implement below when client_protocols send_mail is functional
+
+        # send email with template and addresses
+        # to_addresses = [
+        #     person["email"] for person in ledger_data["ledger"]["people"]
+        # ]
+        # to_addresses = ", ".join(to_addresses)
+        # success = send_email(message, to_addresses)
+

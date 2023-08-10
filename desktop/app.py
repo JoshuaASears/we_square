@@ -230,10 +230,8 @@ class App(tk.Tk):
                     "persons on this Ledger.",
             icon=tkm.INFO
         )
-        # make json
         if confirmation:
-            result = self._app_model.send_ledger()
-            # TODO: Display Result on UI
+            self._app_model.send_ledger()
 
     def ledger_frame_delete_ledger(self):
         confirmation = tkm.askokcancel(
@@ -244,7 +242,6 @@ class App(tk.Tk):
         if confirmation:
             self._app_model.delete_ledger()
             self.raise_select_frame()
-
 
 
 if __name__ == "__main__":
