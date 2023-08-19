@@ -15,6 +15,25 @@ class AppModel:
         # tuple(ledger_id("item", "amount", "date", "paid_by"))
         self._transaction_being_updated = None
 
+        self._tooltips_enabled = True
+        self._tooltip_message = {
+            "default": "Tooltips Enabled",
+            "ledger_button": "Select existing ledger from dropdown to view.",
+            "select_dropdown": "Ledgers in database populate here.",
+            "new_button": "Create a new ledger between two or more people.",
+            "create_button": "Ledgers must have a unique title and 2+ people.",
+            "back_button": "Go back to home screen.",
+            "item_dropdown": "Enter new item, "
+                             "or select a person to record payment to them",
+            "edit_item_button": "Select item from table. "
+                                "Edited fields will be marked with a ' * '.",
+            "delete_item_button": "Select item from table. "
+                                "Deleted items will be marked with '(del)'.",
+            "send_button": "Send ledger to all via email service. "
+                           "Email not yet configured.",
+            "delete_button": "Delete ledger and return to home screen."
+        }
+
     def close_connection(self):
         self._db_connection.close()
 
@@ -26,12 +45,22 @@ class AppModel:
     def get_current_ledger(self) -> int:
         return self._current_ledger
 
+    def get_tooltip_message(self, key):
+        return self._tooltip_message[key]
+
+    def get_tooltip_status(self):
+        return self._tooltips_enabled
+
     def set_current_ledger(self, ledger_id: int):
         self._current_ledger = ledger_id
 
     def set_ledger_from_title(self, title: str):
         ledger_id = self._db_connection.retrieve_ledger_id_from_title(title)
         self.set_current_ledger(ledger_id)
+
+    def set_tooltip_status(self, toggle):
+        self._tooltips_enabled = toggle
+
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
@@ -187,8 +216,8 @@ class AppModel:
 
         expense_total = round(expense_total, 2)
         expense_per_person = round((expense_total / number_of_people), 2)
-        summary = f"Expense total: ${expense_total}\t" + \
-                f"Total per person: ${expense_per_person}\n"
+        summary = f"Expense total: ${expense_total}. " + \
+                f"Total per person: ${expense_per_person}. \n"
         we_square = True
         for index in range(len(people)):
             expense_difference = \
@@ -198,10 +227,10 @@ class AppModel:
                 if expense_difference < 0:
                     summary += \
                         f"{people[index]} is owed " + \
-                        f"${abs(expense_difference)}. "
+                        f"${abs(expense_difference)}. \n"
                 elif expense_difference > .02:
                     summary += \
-                        f"{people[index]} owes ${abs(expense_difference)}. "
+                        f"{people[index]} owes ${abs(expense_difference)}. \n"
         if we_square:
             summary += "We_Square!"
         return summary

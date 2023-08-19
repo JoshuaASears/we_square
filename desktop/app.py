@@ -28,14 +28,27 @@ class App(tk.Tk):
         )
         self.view_window.pack()
 
+        # set tool tip
+        self._tooltip_label = ttk.Label(
+            self,
+            text="Tooltips Enabled",
+            padding=10,
+            borderwidth=1,
+            relief="solid",
+        )
+        self.toggle_tooltips()
+
         # set callbacks
         select_callbacks = [
             self.select_frame_raise_create_frame,
-            self.select_frame_raise_ledger_frame
+            self.select_frame_raise_ledger_frame,
+            self.set_tooltip_message,
+            self.toggle_tooltips
         ]
         create_callbacks = [
             self.raise_select_frame,
-            self.create_frame_create_new_ledger
+            self.create_frame_create_new_ledger,
+            self.set_tooltip_message
         ]
         ledger_callbacks = [
             self.ledger_frame_add_transaction,
@@ -44,6 +57,7 @@ class App(tk.Tk):
             self.raise_select_frame,
             self.ledger_frame_send_ledger,
             self.ledger_frame_delete_ledger,
+            self.set_tooltip_message
         ]
 
         # initialize views
@@ -52,6 +66,7 @@ class App(tk.Tk):
             "create": Create(self.view_window, create_callbacks),
             "ledger": Ledger(self.view_window, ledger_callbacks),
         }
+
 
         for frame in self.frames:
             self.frames[frame].grid(
@@ -68,6 +83,7 @@ class App(tk.Tk):
     #           ROOT LEVEL FUNCTIONS
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 
     def exit_handler(self):
         self._app_model.close_connection()
@@ -87,6 +103,23 @@ class App(tk.Tk):
 
         # raise view
         self.frames[frame].tkraise()
+
+    def set_tooltip_message(self, event, key):
+        if self._app_model.get_tooltip_status():
+            self._tooltip_label["text"] = \
+                self._app_model.get_tooltip_message(key)
+
+    def toggle_tooltips(self):
+        status = self._app_model.get_tooltip_status()
+        if status:
+            self._app_model.set_tooltip_status(False)
+            self._tooltip_label.pack_forget()
+        else:
+            self._app_model.set_tooltip_status(True)
+            self._tooltip_label.pack(
+                anchor="w",
+                fill=tk.X
+            )
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #

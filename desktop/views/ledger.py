@@ -104,9 +104,9 @@ class Ledger(ttk.Frame):
             self,
             text="\n",
         )
-        self._select_button = ttk.Button(
+        self._back_button = ttk.Button(
             self,
-            text="Select Ledger",
+            text="Back",
             command=callbacks[3]
         )
         self._send_button = ttk.Button(
@@ -114,7 +114,7 @@ class Ledger(ttk.Frame):
             text="Send Ledger",
             command=callbacks[4]
         )
-        self._delete_ledger_button = ttk.Button(
+        self._delete_button = ttk.Button(
             self,
             text="Delete Ledger",
             command=callbacks[5]
@@ -227,7 +227,7 @@ class Ledger(ttk.Frame):
             columnspan=5,
             sticky="W"
         )
-        self._select_button.grid(
+        self._back_button.grid(
             column=0,
             row=7,
             columnspan=1,
@@ -239,11 +239,61 @@ class Ledger(ttk.Frame):
             columnspan=1,
             sticky="WE"
         )
-        self._delete_ledger_button.grid(
+        self._delete_button.grid(
             column=2,
             row=7,
             columnspan=1,
             sticky="WE"
+        )
+
+        # Event Bindings for Tooltips
+        self._item_dropdown.bind(
+            sequence="<Enter>",
+            func=lambda event, key="item_dropdown": callbacks[6](event, key)
+        )
+        self._item_dropdown.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[6](event, key)
+        )
+        self._edit_item_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="edit_item_button": callbacks[6](event, key)
+        )
+        self._edit_item_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[6](event, key)
+        )
+        self._delete_item_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="delete_item_button": callbacks[6](event, key)
+        )
+        self._delete_item_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[6](event, key)
+        )
+        self._back_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="back_button": callbacks[6](event, key)
+        )
+        self._back_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[6](event, key)
+        )
+        self._send_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="send_button": callbacks[6](event, key)
+        )
+        self._send_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[6](event, key)
+        )
+        self._delete_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="delete_button": callbacks[6](event, key)
+        )
+        self._delete_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[6](event, key)
         )
 
     def get_new_transaction_values(self):
@@ -304,17 +354,17 @@ class Ledger(ttk.Frame):
         self._add_item_button['text'] = "upd"
         self._edit_item_button["state"] = tk.DISABLED
         self._delete_item_button["state"] = tk.DISABLED
-        self._select_button["state"] = tk.DISABLED
+        self._back_button["state"] = tk.DISABLED
         self._send_button["state"] = tk.DISABLED
-        self._delete_ledger_button["state"] = tk.DISABLED
+        self._delete_button["state"] = tk.DISABLED
 
     def restore_state(self):
         self._add_item_button['text'] = "add"
         self._edit_item_button["state"] = tk.NORMAL
         self._delete_item_button["state"] = tk.NORMAL
-        self._select_button["state"] = tk.NORMAL
+        self._back_button["state"] = tk.NORMAL
         self._send_button["state"] = tk.NORMAL
-        self._delete_ledger_button["state"] = tk.NORMAL
+        self._delete_button["state"] = tk.NORMAL
 
     def is_transaction_selected(self):
         if self._transactions.selection():

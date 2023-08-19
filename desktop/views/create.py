@@ -1,4 +1,5 @@
 
+import re
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as tkm
@@ -56,12 +57,12 @@ class Create(ttk.Frame):
             command=self.delete_person,
             width=int(width / 2)
         )
-        self._select_button = ttk.Button(
+        self._back_button = ttk.Button(
             self,
             text="Back",
             command=callbacks[0]
         )
-        self._ledger_button = ttk.Button(
+        self._create_button = ttk.Button(
             self,
             text="Create Ledger",
             command=callbacks[1],
@@ -137,17 +138,35 @@ class Create(ttk.Frame):
             columnspan=1,
             sticky="NS"
         )
-        self._select_button.grid(
+        self._back_button.grid(
             column=0,
             row=6,
             columnspan=1,
             sticky="EW"
         )
-        self._ledger_button.grid(
+        self._create_button.grid(
             column=1,
             row=6,
             columnspan=1,
             sticky="EW"
+        )
+
+        # Event Bindings for Tooltips
+        self._back_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="back_button": callbacks[2](event, key)
+        )
+        self._back_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[2](event, key)
+        )
+        self._create_button.bind(
+            sequence="<Enter>",
+            func=lambda event, key="create_button": callbacks[2](event, key)
+        )
+        self._create_button.bind(
+            "<Leave>",
+            lambda event, key="default": callbacks[2](event, key)
         )
 
     def get_people(self):
@@ -174,6 +193,7 @@ class Create(ttk.Frame):
         # get string data from fields and add
         name = self._name_entry.get()
         email = self._email_entry.get()
+        email_validation = '^[a-zA-Z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z|A-Z]{2,7}$'
         if not 0 < len(name) < 16:
             tkm.showinfo(
                 title="Unable to add person",
@@ -181,10 +201,10 @@ class Create(ttk.Frame):
                 icon=tkm.INFO
             )
             return
-        if not 5 < len(email) < 30:
+        if not re.match(email_validation, email):
             tkm.showinfo(
                 title="Unable to add person",
-                message="Please enter valid email.",
+                message="Please enter valid email: example@domain.com",
                 icon=tkm.INFO
             )
             return

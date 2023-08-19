@@ -6,7 +6,7 @@
 
 **We_Square?** is an expense tracking application with full data persistence in which users can record and balance shared expenses with any number of people.
 
-### Version: Pre-release 0.3.0
+### Version: Pre-release 0.4.0
 
 ## Installation
 
