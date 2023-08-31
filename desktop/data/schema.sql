@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS  transactions(
     item TEXT NOT NULL,
     amount TEXT NOT NULL,
     date TEXT NOT NULL,
-    paid_by TEXT NOT NULL,
+    paid_by INT NOT NULL,
     item_edited INTEGER DEFAULT 0,
     amount_edited INTEGER DEFAULT 0,
     date_edited INTEGER DEFAULT 0,

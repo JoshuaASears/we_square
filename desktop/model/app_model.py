@@ -312,4 +312,3 @@ class AppModel:
         # ]
         # to_addresses = ", ".join(to_addresses)
         # success = send_email(message, to_addresses)
-

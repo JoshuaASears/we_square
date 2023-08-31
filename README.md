@@ -2,7 +2,7 @@
 
 ## About
 
-**We_Square?** is named after the colloquialism, “Are we square?” which we ask each other to determine whether we or not we owe each other money for shared expenses.
+**We_Square?** is named after the colloquialism, “Are we square?” which we ask each other to determine whether we or not money is owed between parties for shared expenses.
 
 **We_Square?** is an expense tracking application with full data persistence in which users can record and balance shared expenses with any number of people.
 
@@ -14,7 +14,7 @@
 
 ## User Guide
 
-We_Square? is a shared expense tracker. A user can track expenses across multiple ledgers that hold transactions from any number of people on the ledger.
+We_Square? is a shared expense tracker. A user can have any number of ongoing ledgers, each ledger managing expenses and transactions between 2 or more parties.
 Example work flow: 
 1. Create a new ledger. Give your ledger a recognizable title, add as many people to the ledger as you like with just their name and email address.
 2. Start recording transactions. A transaction is an itemized expense on the ledger. Record a name for the item (ex: "Pizza," "Go karts," etc.), the expense total, the date of the expense, and select who on the ledger paid for it.
@@ -22,10 +22,10 @@ Example work flow:
 4. Party's can itemize transactions between two people on the ledger, representing payment from one person to another.
 5. Finally, a full itemized list of transactions and summary may be shared with all parties on the ledger via the emails that were registered from step one.
 
-Note: Because the nature of expense tracking is transactional, and because people who share a ledger may wish to also see in full transparence if any items had been edited or deleted, We_Square? also logs such changes until the entire ledger is deleted by the user.
+Note: Because the nature of expense tracking is transactional, and because people who share a ledger may wish to also see in full transparency if any items had been edited or deleted, We_Square? also logs such changes until the entire ledger is deleted by the user.
 
 ## Development
-**We_Square?**  It is developed using Python and embedded SQLite queries with a model-view-control architecture. 
+**We_Square?**  It is developed using Python and embedded SQLite queries with a model-view-control architecture. Models designed on Lucid.app. 
 
 ### Python 3.11 Libraries:
   - datetime
@@ -40,7 +40,7 @@ Note: Because the nature of expense tracking is transactional, and because peopl
 
 ### Database Schema
 
-[COMING SOON]
+![Schema](er_schema.png "Schema")
 
 ### Authors
 Joshua Sears, 2023

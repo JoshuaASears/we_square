@@ -29,7 +29,7 @@ class DatabaseOperations:
     def delete_ledger(self, ledger_id: int):
         sql = """
                 DELETE FROM ledgers
-                where ledger_id = ?;
+                WHERE ledger_id = ?;
                 """
         parameters = (ledger_id,)
         self._cursor.execute(sql, parameters)
@@ -123,18 +123,6 @@ class DatabaseOperations:
             return ledger_id[0]
         return None
 
-    def retrieve_title_from_ledger_id(self, ledger_id: int) -> str:
-        """Takes an int. Returns str."""
-        sql = """
-            SELECT title
-            FROM ledgers
-            WHERE ledger_id = ?;
-            """
-        parameters = (ledger_id,)
-        results = self._cursor.execute(sql, parameters)
-        title = results.fetchone()[0]
-        return title
-
     def retrieve_ledgers_titles(self) -> list[str]:
         """Returns ["title1", "title2",...]"""
         sql = """
@@ -147,12 +135,25 @@ class DatabaseOperations:
         ledgers_list = [x[0] for x in ledgers_list]
         return ledgers_list
 
+    def retrieve_names_and_email_by_ledger_id(self, ledger_id: int) \
+            -> list[tuple[str, str]]:
+        """Takes int. Returns [("name1", "email1"), ("name2", "email2"),...]"""
+        sql = """
+            SELECT name, email
+            FROM people
+            WHERE ledger_id = ?;
+            """
+        parameters = (ledger_id,)
+        results = self._cursor.execute(sql, parameters)
+        people = results.fetchall()
+        return people
+
     def retrieve_names_by_ledger_id(self, ledger_id: int) -> list[str]:
         """Takes int. Returns ["name1", "name2",...]"""
         sql = """
             SELECT name
             FROM people
-            where ledger_id = ?;
+            WHERE ledger_id = ?;
             """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
@@ -160,18 +161,17 @@ class DatabaseOperations:
         people = [x[0] for x in people]
         return people
 
-    def retrieve_names_and_email_by_ledger_id(self, ledger_id: int) \
-            -> list[tuple[str, str]]:
-        """Takes int. Returns [("name1", "email1"), ("name2", "email2"),...]"""
+    def retrieve_title_from_ledger_id(self, ledger_id: int) -> str:
+        """Takes an int. Returns str."""
         sql = """
-            SELECT name, email
-            FROM people
-            where ledger_id = ?;
+            SELECT title
+            FROM ledgers
+            WHERE ledger_id = ?;
             """
         parameters = (ledger_id,)
         results = self._cursor.execute(sql, parameters)
-        people = results.fetchall()
-        return people
+        title = results.fetchone()[0]
+        return title
 
     def retrieve_transactions_by_ledger_id(self, ledger_id: int) \
             -> list[tuple[int, str, str, str, str, int, int, int, int, int]]:
